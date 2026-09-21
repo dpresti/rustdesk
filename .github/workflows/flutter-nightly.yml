@@ -1,9 +1,8 @@
 name: Flutter Nightly Build
 
 on:
-  schedule:
-    # schedule build every night
-    - cron: "0 0 * * *"
+  # Fork note: daily cron disabled - this fork only builds a custom Windows
+  # client (rustdesk.presti.page baked in) on manual trigger, not nightly.
   workflow_dispatch:
 
 jobs:

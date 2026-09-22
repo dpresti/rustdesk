@@ -797,6 +797,19 @@ jobs:
         with:
           submodules: recursive
 
+      # Fork customization: same patch as the Windows job - bake our self-hosted
+      # rustdesk.presti.page server + key in as the compiled default, and hardcode
+      # away the "using public server" nudge (see flutter-build.yml history for why).
+      - name: Patch default rendezvous server + key
+        shell: bash
+        run: |
+          sed -i '' 's#pub const RENDEZVOUS_SERVERS: &\[&str\] = &\["rs-ny.rustdesk.com"\];#pub const RENDEZVOUS_SERVERS: \&[\&str] = \&["rustdesk.presti.page"];#' libs/hbb_common/src/config.rs
+          sed -i '' 's#pub const RS_PUB_KEY: &str = "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=";#pub const RS_PUB_KEY: \&str = "7UbQ7gxRe7YNiuJQVCqWlnZp1dwGwyKvSTvI8LjymeE=";#' libs/hbb_common/src/config.rs
+          grep -q 'crate::get_custom_rendezvous_server(get_option("custom-rendezvous-server")).is_empty()' src/common.rs || { echo "using_public_server() body not found - upstream source changed, update the patch"; exit 1; }
+          sed -i '' 's#crate::get_custom_rendezvous_server(get_option("custom-rendezvous-server")).is_empty()#false#' src/common.rs
+          grep -n "RENDEZVOUS_SERVERS\|RS_PUB_KEY" libs/hbb_common/src/config.rs | head -2
+          grep -n -A 2 "pub fn using_public_server" src/common.rs
+
       - name: Import the codesign cert
         if: env.MACOS_P12_BASE64 != null
         uses: apple-actions/import-codesign-certs@253ddeeac23f2bdad1646faac5c8c2832e800071 # v1
@@ -1577,6 +1590,19 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           submodules: recursive
+
+      # Fork customization: same patch as the Windows/macOS jobs - bake our
+      # self-hosted rustdesk.presti.page server + key in as the compiled default,
+      # and hardcode away the "using public server" nudge.
+      - name: Patch default rendezvous server + key
+        shell: bash
+        run: |
+          sed -i 's#pub const RENDEZVOUS_SERVERS: &\[&str\] = &\["rs-ny.rustdesk.com"\];#pub const RENDEZVOUS_SERVERS: \&[\&str] = \&["rustdesk.presti.page"];#' libs/hbb_common/src/config.rs
+          sed -i 's#pub const RS_PUB_KEY: &str = "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=";#pub const RS_PUB_KEY: \&str = "7UbQ7gxRe7YNiuJQVCqWlnZp1dwGwyKvSTvI8LjymeE=";#' libs/hbb_common/src/config.rs
+          grep -q 'crate::get_custom_rendezvous_server(get_option("custom-rendezvous-server")).is_empty()' src/common.rs || { echo "using_public_server() body not found - upstream source changed, update the patch"; exit 1; }
+          sed -i 's#crate::get_custom_rendezvous_server(get_option("custom-rendezvous-server")).is_empty()#false#' src/common.rs
+          grep -n "RENDEZVOUS_SERVERS\|RS_PUB_KEY" libs/hbb_common/src/config.rs | head -2
+          grep -n -A 2 "pub fn using_public_server" src/common.rs
 
       - name: Set Swap Space
         uses: pierotofy/set-swap-space@49819abfb41bd9b44fb781159c033dba90353a7c # v1.0

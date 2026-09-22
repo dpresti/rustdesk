@@ -156,6 +156,14 @@ jobs:
           sed -i 's#pub const RENDEZVOUS_SERVERS: &\[&str\] = &\["rs-ny.rustdesk.com"\];#pub const RENDEZVOUS_SERVERS: \&[\&str] = \&["rustdesk.presti.page"];#' libs/hbb_common/src/config.rs
           sed -i 's#pub const RS_PUB_KEY: &str = "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=";#pub const RS_PUB_KEY: \&str = "7UbQ7gxRe7YNiuJQVCqWlnZp1dwGwyKvSTvI8LjymeE=";#' libs/hbb_common/src/config.rs
           grep -n "RENDEZVOUS_SERVERS\|RS_PUB_KEY" libs/hbb_common/src/config.rs | head -2
+          # using_public_server() only checks whether the user manually typed a server
+          # into Settings > Network (the "custom-rendezvous-server" option) - it has no
+          # idea our compiled-in default above is already our own server, so it still
+          # shows the "set up your own server" nudge even though every build from this
+          # fork is, by definition, never on the public one. Hardcode the body to false.
+          grep -q 'crate::get_custom_rendezvous_server(get_option("custom-rendezvous-server")).is_empty()' src/common.rs || { echo "using_public_server() body not found - upstream source changed, update the patch"; exit 1; }
+          sed -i 's#crate::get_custom_rendezvous_server(get_option("custom-rendezvous-server")).is_empty()#false#' src/common.rs
+          grep -n -A 2 "pub fn using_public_server" src/common.rs
 
       - name: Restore bridge files
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1

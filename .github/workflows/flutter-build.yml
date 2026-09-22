@@ -1009,7 +1009,12 @@ jobs:
       - build-for-windows-flutter
       - build-for-windows-sciter
     runs-on: ubuntu-latest
-    if: ${{ inputs.upload-artifact }}
+    # Disabled in this fork: it bundles every platform's unsigned build into one
+    # combined tarball release asset, which nothing in our pipeline consumes (we
+    # pull each platform's own asset directly instead) - and several of its steps
+    # hard-reference the Windows aarch64 artifact, which no longer exists now that
+    # the Windows matrix is trimmed to x86_64 only.
+    if: false
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
